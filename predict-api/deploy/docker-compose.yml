@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/api/Dockerfile
+      target: prod
+    image: severstal_predict:${SEVERSTAL_PREDICT_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      rmq:
+        condition: service_healthy
+    environment:
+      SEVERSTAL_PREDICT_HOST: 0.0.0.0
+      SEVERSTAL_PREDICT_RABBIT_HOST: severstal_predict-rmq
+      SEVERSTAL_PREDICT_REDIS_HOST: severstal_predict-redis
+    healthcheck:
+      test: curl --fail http://${SEVERSTAL_PREDICT_HOST}:${SEVERSTAL_PREDICT_PORT}/health || echo 1
+      interval: 3s
+      timeout: 3s
+      retries: 50
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./deploy/worker/Dockerfile
+    image: worker:latest
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+      rmq:
+        condition: service_healthy
+    environment:
+      SEVERSTAL_PREDICT_HOST: 0.0.0.0
+      SEVERSTAL_PREDICT_RABBIT_HOST: severstal_predict-rmq
+    deploy:
+      # Подобрать по нагрузке
+      replicas: 1
+
+  redis:
+    image: bitnami/redis:6.2.5
+    hostname: "severstal_predict-redis"
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+
+  rmq:
+    image: rabbitmq:3.9.16-alpine
+    hostname: "severstal_predict-rmq"
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    healthcheck:
+      test: rabbitmq-diagnostics check_running -q
+      interval: 3s
+      timeout: 3s
+      retries: 50

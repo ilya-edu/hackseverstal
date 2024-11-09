@@ -1,0 +1,14 @@
+[Unit]
+Description=Puma HTTP Server lct_api
+After=network.target
+[Service]
+Type=simple
+WorkingDirectory=/home/serveriot/lct-api/current/
+Environment=RAILS_ENV=production PORT=9099
+ExecStart=/home/serveriot/.rbenv/shims/bundle exec puma
+Restart=always
+RestartSec=5
+PIDFile=/home/serveriot/lct-api/shared/tmp/pids/puma.pid
+
+[Install]
+WantedBy=default.target

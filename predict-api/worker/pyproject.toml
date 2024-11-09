@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "worker"
+version = "0.1.0"
+description = "Worker for Predict API."
+authors = [
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+aio-pika = "^8.3.0"
+yarl = "^1.9.2"
+tensorflow-io-gcs-filesystem = "0.31.0"
+tensorflow = "2.11"
+scipy = "^1.10.1"
+scikit-learn = "^1.2.2"
+pydantic = "^1.10.7"
+pandas = "^2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
